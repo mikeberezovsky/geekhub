@@ -9,6 +9,23 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/gold_button_title"
+        android:tag="gold"
+        />
+
+    <Button
+        android:id="@+id/silver_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/silver_button_title"
+        android:tag="silver"
+        />
+
+    <Button
+        android:id="@+id/uranium_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/uranium_button_title"
+        android:tag="uranium"
         />
 
 </LinearLayout>

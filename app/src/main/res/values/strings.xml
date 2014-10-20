@@ -5,6 +5,10 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="gold_button_title">Gold Baton</string>
+    <string name="silver_button_title">Silver Button</string>
+    <string name="uranium_button_title">Uranium Button</string>
     <string name="gold_button_data">Gold Baton is a suvenier introduced by Yanukovosch</string>
+    <string name="silver_button_data">Silver is just a good metal. And vampires don\'t like it.</string>
+    <string name="uranium_button_data">Uranium crowbar sinks even in mercury</string>
 
 </resources>

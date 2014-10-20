@@ -6,9 +6,19 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.michaelb.homework1.R;
+import com.michaelb.homework1.fragments.ControlFragment;
+import com.michaelb.homework1.fragments.SlaveFragment;
 
 
-public class MyActivity extends Activity {
+public class MyActivity extends Activity implements ControlFragment.OnButtonClickListener {
+
+    public void onButtonClick(String btnTag) {
+        SlaveFragment slaveFragment = (SlaveFragment) getFragmentManager().findFragmentById(R.id.slave_fragment);
+        String packageName = getPackageName();
+        int resId = getResources().getIdentifier(btnTag+"_button_data", "string", packageName);
+        String buttonDecText = getResources().getString(resId);
+        slaveFragment.setViewText(buttonDecText);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
