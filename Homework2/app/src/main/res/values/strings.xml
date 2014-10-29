@@ -14,6 +14,8 @@
         <item>text_string3</item>
         <item>text_string4</item>
     </string-array>
+    <string name="home_fragment_text">This is home fragment. Click any drawer item to switch to animation fragment</string>
+    <string name="animation_fragment_text">This is animations fragment. For now it does nothing.</string>
 
 
 </resources>
