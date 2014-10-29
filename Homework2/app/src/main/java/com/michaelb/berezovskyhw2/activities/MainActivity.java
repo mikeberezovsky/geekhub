@@ -14,6 +14,8 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.michaelb.berezovskyhw2.R;
+import com.michaelb.berezovskyhw2.fragments.AnimationFragment;
+import com.michaelb.berezovskyhw2.fragments.HomeFragment;
 
 
 public class MainActivity extends Activity {
@@ -23,7 +25,6 @@ public class MainActivity extends Activity {
     private ListView mDrawerList;
     private CharSequence mDrawerTitle;
     private CharSequence mTitle;
-
 
     private class DrawerItemClickListener implements ListView.OnItemClickListener {
         @Override
@@ -35,10 +36,16 @@ public class MainActivity extends Activity {
     private void selectItem(int position) {
         mDrawerList.setItemChecked(position, true);
         mDrawerLayout.closeDrawer(mDrawerList);
+        displayAnimationsFragment();
     }
 
-
-
+    private void displayAnimationsFragment(){
+        if (findViewById(R.id.content_main) != null) {
+            AnimationFragment animationFragment = new AnimationFragment();
+            animationFragment.setArguments(getIntent().getExtras());
+            getFragmentManager().beginTransaction().replace(R.id.content_main,animationFragment).addToBackStack(null).commit();
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +54,16 @@ public class MainActivity extends Activity {
 
         ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
+
+        if (findViewById(R.id.content_main) != null) {
+            if (savedInstanceState != null) {
+                return;
+            }
+            HomeFragment homeFragment = new HomeFragment();
+            homeFragment.setArguments(getIntent().getExtras());
+            getFragmentManager().beginTransaction().add(R.id.content_main,homeFragment).commit();
+        }
+
 
         mTitle = mDrawerTitle = getTitle();
         mDrawerTitles = getResources().getStringArray(R.array.drawer_action_titles);
