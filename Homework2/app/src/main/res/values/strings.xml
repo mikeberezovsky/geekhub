@@ -9,17 +9,17 @@
     <string name="drawer_close">Close Drawer</string>
     <string-array
         name="drawer_action_titles">
-        <item>text_string1</item>
-        <item>text_string2</item>
-        <item>text_string3</item>
-        <item>text_string4</item>
+        <item>Go to animations1</item>
+        <item>Go to animations2</item>
+        <item>Go to animations3</item>
+        <item>Go to animations4</item>
     </string-array>
     <string name="btn_fade_title">Toggle Fade Animation</string>
     <string name="btn_zoom_title">Toggle Zoom Animation</string>
     <string name="btn_rotate_title">Rotate Animation</string>
     <string name="btn_move_title">Move Animation</string>
     <string name="home_fragment_text">This is home fragment. Click any drawer item to switch to animation fragment</string>
-    <string name="animation_fragment_text">This is animations fragment. For now it does nothing.</string>
+    <string name="animation_fragment_text">This is animations fragment. The animations are simple and stupid. No smart behaviour. Click the buttons.</string>
 
 
 </resources>
