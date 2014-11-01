@@ -14,6 +14,10 @@
         <item>text_string3</item>
         <item>text_string4</item>
     </string-array>
+    <string name="btn_fade_title">Toggle Fade Animation</string>
+    <string name="btn_zoom_title">Toggle Zoom Animation</string>
+    <string name="btn_rotate_title">Rotate Animation</string>
+    <string name="btn_move_title">Move Animation</string>
     <string name="home_fragment_text">This is home fragment. Click any drawer item to switch to animation fragment</string>
     <string name="animation_fragment_text">This is animations fragment. For now it does nothing.</string>
 
