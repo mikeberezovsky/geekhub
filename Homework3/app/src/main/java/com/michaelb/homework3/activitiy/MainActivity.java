@@ -14,8 +14,8 @@ public class MainActivity extends Activity implements DataListFragment.ActivityL
 
     public void onListItemSelect(String itemText) {
         DataContentFragment dataContentFragment = (DataContentFragment) getFragmentManager().findFragmentById(R.id.content_fragment);
-        if (dataContentFragment != null) {
-            dataContentFragment.setTextviewText(itemText);
+        if (dataContentFragment != null && dataContentFragment.isVisible()) {
+                dataContentFragment.setTextviewText(itemText);
         } else {
             DataContentFragment contentFragment = new DataContentFragment();
             Bundle args = new Bundle();
