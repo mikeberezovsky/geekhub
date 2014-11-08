@@ -15,6 +15,14 @@ import com.michaelb.homework3.R;
 public class DataContentFragment extends Fragment {
     public final static String ARG_TEXT = "text";
     private String currentText = null;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // retain this fragment
+        setRetainInstance(true);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -47,10 +55,10 @@ public class DataContentFragment extends Fragment {
 
     public void setTextviewText(String text) {
         View fragmentView = getView();
-        if (fragmentView != null) {
+        //if (fragmentView != null) {
             TextView tv = (TextView) fragmentView.findViewById(R.id.list_text_view);
             tv.setText(text);
             currentText = text;
-        }
+        //}
     }
 }
