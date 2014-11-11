@@ -55,10 +55,9 @@ public class DataContentFragment extends Fragment {
 
     public void setTextviewText(String text) {
         View fragmentView = getView();
-        //if (fragmentView != null) {
-            TextView tv = (TextView) fragmentView.findViewById(R.id.list_text_view);
-            tv.setText(text);
-            currentText = text;
-        //}
+        TextView tv = (TextView) fragmentView.findViewById(R.id.list_text_view);
+        tv.setText(text);
+        currentText = text;
+        getActivity().setTitle(currentText);
     }
 }
