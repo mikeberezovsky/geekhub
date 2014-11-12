@@ -5,9 +5,15 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.michaelb.homework4.R;
+import com.michaelb.homework4.adapter.RSSListAdapter;
+import com.michaelb.homework4.entities.HackerNewsRSSItem;
+
+import java.util.List;
 
 /**
  * Created by michaelb on 11/11/14.
@@ -19,9 +25,9 @@ public class RSSListFragment extends Fragment {
         return inflater.inflate(R.layout.rss_list_fragment, container, false);
     }
 
-    public void setTextviewText(String text) {
+    public void initRSSList(List<HackerNewsRSSItem> items) {
         View fragmentView = getView();
-        TextView tv = (TextView) fragmentView.findViewById(R.id.list_text_view);
-        tv.setText(text);
+        ListView lv = (ListView) fragmentView.findViewById(R.id.rss_list_view);
+        lv.setAdapter(new RSSListAdapter(getActivity(), R.layout.rss_list_item, items.toArray(new HackerNewsRSSItem[items.size()])));
     }
 }

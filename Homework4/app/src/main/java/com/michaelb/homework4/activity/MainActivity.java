@@ -7,6 +7,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.michaelb.homework4.R;
+import com.michaelb.homework4.entities.HackerNewsRSSItem;
 import com.michaelb.homework4.fragment.RSSListFragment;
 
 import org.apache.http.HttpResponse;
@@ -16,13 +17,19 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class MainActivity extends Activity {
-    private String rssFeedJSON = null;
+    private String rssFeedJSONString = null;
+    private List<HackerNewsRSSItem> hackerNewsRSSItems = null;
+    private List<String> hackerNewsRSSTitles = null;
 
     class RequestTask extends AsyncTask<String, String, String> {
 
@@ -49,16 +56,32 @@ public class MainActivity extends Activity {
             } catch (IOException e) {
                 //TODO Handle problems..
             }
+            rssFeedJSONString = responseString;
+            try {
+                JSONObject rssObject = new JSONObject(responseString);
+                JSONArray items = rssObject.getJSONArray("items");
+                for (int i = 0; i < items.length(); i++) {
+                    JSONObject jsonItem = items.getJSONObject(i);
+                    HackerNewsRSSItem rssItem = new HackerNewsRSSItem();
+                    rssItem.setTitle(jsonItem.getString("title"));
+                    rssItem.setUrl(jsonItem.getString("url"));
+                    hackerNewsRSSItems.add(rssItem);
+                    hackerNewsRSSTitles.add(jsonItem.getString("title"));
+                }
+            } catch (Exception e) {
+                //do nothing
+            }
             return responseString;
         }
 
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
-            rssFeedJSON = result;
+
             RSSListFragment rssListFragment = (RSSListFragment) getFragmentManager().findFragmentByTag(getResources().getString(R.string.rss_list_fragment_tag));
             if ( rssListFragment != null ) {
-                rssListFragment.setTextviewText(result);
+                //rssListFragment.setTextviewText(result);
+                rssListFragment.initRSSList(hackerNewsRSSItems);
             }
         }
     }
@@ -76,6 +99,8 @@ public class MainActivity extends Activity {
             rssListFragment.setArguments(getIntent().getExtras());
             getFragmentManager().beginTransaction().add(R.id.fragment_container, rssListFragment, getResources().getString(R.string.rss_list_fragment_tag)).commit();
         }
+        hackerNewsRSSItems = new ArrayList<HackerNewsRSSItem>();
+        hackerNewsRSSTitles = new ArrayList<String>();
         new RequestTask().execute(getResources().getString(R.string.feed_src));
     }
 
