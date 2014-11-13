@@ -3,11 +3,13 @@ package com.michaelb.homework4.activity;
 import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import com.michaelb.homework4.R;
 import com.michaelb.homework4.entities.HackerNewsRSSItem;
+import com.michaelb.homework4.fragment.RSSContentFragment;
 import com.michaelb.homework4.fragment.RSSListFragment;
 
 import org.apache.http.HttpResponse;
@@ -26,10 +28,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements RSSListFragment.ActivityListener {
     private String rssFeedJSONString = null;
     private List<HackerNewsRSSItem> hackerNewsRSSItems = null;
     private List<String> hackerNewsRSSTitles = null;
+
+    public void onListItemSelect(String itemURL) {
+        RSSContentFragment dataContentFragment = (RSSContentFragment) getFragmentManager().findFragmentById(R.id.content_fragment);
+        if (dataContentFragment != null && dataContentFragment.isVisible()) {
+            dataContentFragment.setWebViewURL(itemURL);
+        } else {
+            RSSContentFragment contentFragment = new RSSContentFragment();
+            Bundle args = new Bundle();
+            args.putString(RSSContentFragment.ARG_URL ,itemURL);
+            contentFragment.setArguments(args);
+            getFragmentManager().beginTransaction().replace(R.id.fragment_container,contentFragment).addToBackStack(null).commit();
+        }
+    }
 
     class RequestTask extends AsyncTask<String, String, String> {
 
@@ -77,12 +92,9 @@ public class MainActivity extends Activity {
         @Override
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
+            Log.i("MainActivity", "populateRSSListFragment will be called from task.");
+            populateRSSListFragment(hackerNewsRSSItems);
 
-            RSSListFragment rssListFragment = (RSSListFragment) getFragmentManager().findFragmentByTag(getResources().getString(R.string.rss_list_fragment_tag));
-            if ( rssListFragment != null ) {
-                //rssListFragment.setTextviewText(result);
-                rssListFragment.initRSSList(hackerNewsRSSItems);
-            }
         }
     }
 
@@ -90,20 +102,16 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        setContentView(R.layout.activity_main);
+        Log.i("MainActivity", "onCreate called");
+        if (savedInstanceState != null) {
+            return;
+        }
         if (findViewById(R.id.fragment_container) != null) {
-            if (savedInstanceState != null) {
-                return;
-            }
             RSSListFragment rssListFragment = new RSSListFragment();
             rssListFragment.setArguments(getIntent().getExtras());
             getFragmentManager().beginTransaction().add(R.id.fragment_container, rssListFragment, getResources().getString(R.string.rss_list_fragment_tag)).commit();
         }
-        hackerNewsRSSItems = new ArrayList<HackerNewsRSSItem>();
-        hackerNewsRSSTitles = new ArrayList<String>();
-        new RequestTask().execute(getResources().getString(R.string.feed_src));
     }
-
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -124,8 +132,19 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-    private void displayStringResponse(String jsonString) {
-
+    private void populateRSSListFragment(List<HackerNewsRSSItem> hackerNewsRSSItems) {
+        RSSListFragment rssListFragment = null;
+        Log.i("MainActivity", "populateRSSListFragment called");
+        if (findViewById(R.id.fragment_container) != null) {
+            rssListFragment = (RSSListFragment) getFragmentManager().findFragmentByTag(getResources().getString(R.string.rss_list_fragment_tag));
+            Log.i("MainActivity", "populateRSSListFragment called for fragment_container. Fragment visible: "+rssListFragment.isVisible());
+        } else {
+            rssListFragment = (RSSListFragment) getFragmentManager().findFragmentById(R.id.list_fragment);
+            Log.i("MainActivity", "populateRSSListFragment called for landscape. Fragment visible: "+rssListFragment.isVisible());
+        }
+        if ( rssListFragment != null ) {
+            rssListFragment.initRSSList(hackerNewsRSSItems);
+        }
     }
 
 }
