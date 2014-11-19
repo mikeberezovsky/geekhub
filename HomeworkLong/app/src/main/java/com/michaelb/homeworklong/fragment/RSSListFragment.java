@@ -64,7 +64,6 @@ public class RSSListFragment extends Fragment {
             } catch (IOException e) {
                 //TODO Handle problems..
             }
-            rssFeedJSONString = responseString;
             try {
                 JSONObject rssObject = new JSONObject(responseString);
                 JSONArray items = rssObject.getJSONArray("items");
@@ -85,14 +84,12 @@ public class RSSListFragment extends Fragment {
         protected void onPostExecute(String result) {
             super.onPostExecute(result);
             Log.i("MainActivity", "populateRSSListFragment will be called from task.");
-            //populateRSSListFragment(hackerNewsRSSItems);
             initRSSList(hackerNewsRSSItems);
 
         }
     }
 
     ActivityListener activityListener;
-    private String rssFeedJSONString = null;
     private List<HackerNewsRSSItem> hackerNewsRSSItems = null;
 
     @Override

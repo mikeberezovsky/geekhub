@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="rss_divider">#FFAAAAAA</color>
+    <color name="rss_default">#FFEEEEEE</color>
+    <color name="rss_selected">#FF33B5E5</color>
+    <color name="rss_pressed">#FFAAAAAA</color>
+    <color name="rss_focused">#FF3090F0</color>
+    <color name="rss_disabled">#FFFF0000</color>
+    <color name="rss_text_default">#FF333333</color>
+    <color name="rss_text_selected">#FFFFFFFF</color>
+    <color name="rss_text_pressed">#FF333333</color>
+    <color name="rss_text_focused">#FFFFFFFF</color>
+</resources>
