@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rss_list_item"
+    style="@style/RSSListItem"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/rss_list_item_selector_background"
+    android:textColor="@color/rss_list_item_selector_color"
+/>
