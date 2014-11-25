@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <string name="app_name">GH-BerezovskyRSS</string>
     <string name="action_settings">Settings</string>
-    <string name="rss_list_fragment_tag">rss_list_fragment</string>
-    <string name="feed_src">http://api.ihackernews.com/page</string>
+    <string name="connect_wifi">Connect WiFi</string>
+    <string name="click_item_to_view_content">Click RSS item to view content</string>
 </resources>

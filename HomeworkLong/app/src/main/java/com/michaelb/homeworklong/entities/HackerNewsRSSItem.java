@@ -1,9 +1,12 @@
 package com.michaelb.homeworklong.entities;
 
+import android.os.Parcel;
+import android.os.Parcelable;
+
 /**
  * Created by michaelb on 11/12/14.
  */
-public class HackerNewsRSSItem {
+public class HackerNewsRSSItem implements Parcelable {
     private String title;
     private String url;
     private String id;
@@ -12,8 +15,45 @@ public class HackerNewsRSSItem {
     private String postedAgo;
     private String postedBy;
 
-    public String getTitle() {
+    public HackerNewsRSSItem() {
+    }
 
+    public HackerNewsRSSItem(Parcel source) {
+        title = source.readString();
+        url = source.readString();
+        id = source.readString();
+        commentCount = source.readString();
+        points = source.readString();
+        postedAgo = source.readString();
+        postedBy = source.readString();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(title);
+        dest.writeString(url);
+        dest.writeString(id);
+        dest.writeString(commentCount);
+        dest.writeString(points);
+        dest.writeString(postedAgo);
+        dest.writeString(postedBy);
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public class MyCreator implements Parcelable.Creator<HackerNewsRSSItem> {
+        public HackerNewsRSSItem createFromParcel(Parcel source) {
+            return new HackerNewsRSSItem(source);
+        }
+        public HackerNewsRSSItem[] newArray(int size) {
+            return new HackerNewsRSSItem[size];
+        }
+    }
+
+    public String getTitle() {
         return title;
     }
 

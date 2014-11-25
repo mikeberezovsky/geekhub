@@ -14,8 +14,9 @@ import com.michaelb.homeworklong.R;
  * Created by michaelb on 11/11/14.
  */
 public class RSSContentFragment extends Fragment {
-    public final static String ARG_URL = "";
+    public final static String ARG_URL = "cur_url";
     private String currentURL = null;
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
@@ -35,13 +36,12 @@ public class RSSContentFragment extends Fragment {
             if (currentURL != null) {
                 setWebViewURL(currentURL);
             } else {
-                setWebViewURL("For now it is null");
+                setWebViewURL(null);
             }
         }
     }
 
-
-            @Override
+    @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putString(ARG_URL,currentURL);
@@ -51,7 +51,11 @@ public class RSSContentFragment extends Fragment {
         currentURL = url;
         View fragmentView = getView();
         WebView webView = (WebView) fragmentView.findViewById(R.id.rss_content_view);
-        webView.loadUrl(url);
+        if (url != null) {
+            webView.loadUrl(url);
+        } else {
+            webView.loadData(getResources().getString(R.string.click_item_to_view_content),"text/html", null);
+        }
     }
 
 

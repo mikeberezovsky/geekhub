@@ -13,7 +13,9 @@ import android.widget.ListView;
 
 import com.michaelb.homeworklong.R;
 import com.michaelb.homeworklong.adapter.RSSListAdapter;
+import com.michaelb.homeworklong.constants.FeedURLs;
 import com.michaelb.homeworklong.entities.HackerNewsRSSItem;
+import com.michaelb.homeworklong.asynctask.RequestTask;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -35,62 +37,16 @@ import java.util.List;
  */
 public class RSSListFragment extends Fragment {
 
+    private final static String RSS_ITEMS_STORAGE = "rss_items_bundle_key";
+    private static final String CLASS_NAME = String.valueOf(RSSListFragment.class);
+    private ListView lv = null;
+    private ActivityListener activityListener;
+    private List<HackerNewsRSSItem> hackerNewsRSSItems = null;
+    private boolean rssAsyncInProgress = false;
+
     public interface ActivityListener {
         public void onListItemSelect(String btnTag);
     }
-
-    class RequestTask extends AsyncTask<String, String, String> {
-
-        @Override
-        protected String doInBackground(String... uri) {
-            HttpClient httpclient = new DefaultHttpClient();
-            HttpResponse response;
-            String responseString = null;
-            try {
-                response = httpclient.execute(new HttpGet(uri[0]));
-                StatusLine statusLine = response.getStatusLine();
-                if (statusLine.getStatusCode() == HttpStatus.SC_OK) {
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    response.getEntity().writeTo(out);
-                    out.close();
-                    responseString = out.toString();
-                } else {
-                    //Closes the connection.
-                    response.getEntity().getContent().close();
-                    throw new IOException(statusLine.getReasonPhrase());
-                }
-            } catch (ClientProtocolException e) {
-                //TODO Handle problems..
-            } catch (IOException e) {
-                //TODO Handle problems..
-            }
-            try {
-                JSONObject rssObject = new JSONObject(responseString);
-                JSONArray items = rssObject.getJSONArray("items");
-                for (int i = 0; i < items.length(); i++) {
-                    JSONObject jsonItem = items.getJSONObject(i);
-                    HackerNewsRSSItem rssItem = new HackerNewsRSSItem();
-                    rssItem.setTitle(jsonItem.getString("title"));
-                    rssItem.setUrl(jsonItem.getString("url"));
-                    hackerNewsRSSItems.add(rssItem);
-                }
-            } catch (Exception e) {
-                //do nothing
-            }
-            return responseString;
-        }
-
-        @Override
-        protected void onPostExecute(String result) {
-            super.onPostExecute(result);
-            Log.i("MainActivity", "populateRSSListFragment will be called from task.");
-            initRSSList(hackerNewsRSSItems);
-
-        }
-    }
-
-    ActivityListener activityListener;
-    private List<HackerNewsRSSItem> hackerNewsRSSItems = null;
 
     @Override
     public void onAttach(Activity activity) {
@@ -112,14 +68,35 @@ public class RSSListFragment extends Fragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        hackerNewsRSSItems = new ArrayList<HackerNewsRSSItem>();
-        new RequestTask().execute(getResources().getString(R.string.feed_src));
+        lv = (ListView) view.findViewById(R.id.rss_list_view);
+        Log.i(CLASS_NAME, "onViewCreated trying to get hackerNewsRSSItems from bundle.");
+        if (savedInstanceState != null) {
+            Log.i(CLASS_NAME, "onViewCreated hackerNewsRSSItems in bundle bundle are not empty.");
+            hackerNewsRSSItems = savedInstanceState.getParcelableArrayList(RSS_ITEMS_STORAGE);
+            if (hackerNewsRSSItems != null) {
+                initRSSList(hackerNewsRSSItems);
+            }
+        }
+        if (hackerNewsRSSItems == null) {
+            Log.i(CLASS_NAME, "onViewCreated no hackerNewsRSSItems found in bundle.");
+            new RequestTask(this).execute(FeedURLs.hackernewsFeedURL);
+        }
     }
 
     public void initRSSList(List<HackerNewsRSSItem> items) {
-        View fragmentView = getView();
-        ListView lv = (ListView) fragmentView.findViewById(R.id.rss_list_view);
-        lv.setAdapter(new RSSListAdapter(getActivity(), R.layout.rss_list_item, items.toArray(new HackerNewsRSSItem[items.size()])));
+        hackerNewsRSSItems = items;
+        if (items == null) {
+            Log.i(CLASS_NAME, "items parameter is null.");
+        } else {
+            Log.i(CLASS_NAME, "items parameter is not null.");
+        }
+        HackerNewsRSSItem[] rssListItemsArray = items.toArray(new HackerNewsRSSItem[items.size()]);
+        if (getActivity() != null) {
+            lv.setAdapter(
+                    new RSSListAdapter(getActivity(), R.layout.rss_list_item, rssListItemsArray)
+            );
+        }
+
         AdapterView.OnItemClickListener listener = new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 HackerNewsRSSItem rssItem = (HackerNewsRSSItem) parent.getItemAtPosition(position);
@@ -127,6 +104,27 @@ public class RSSListFragment extends Fragment {
             }
         };
         lv.setOnItemClickListener(listener);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (hackerNewsRSSItems != null && !rssAsyncInProgress) {
+            outState.putParcelableArrayList(RSS_ITEMS_STORAGE, (ArrayList<? extends android.os.Parcelable>) hackerNewsRSSItems);
+        }
+        //outState.putString(RSS_ITEMS_STORAGE,currentURL);
+    }
+
+    public void setHackerNewsRSSItems(List<HackerNewsRSSItem> hackerNewsRSSItems) {
+        this.hackerNewsRSSItems = hackerNewsRSSItems;
+    }
+
+    public void setRssAsyncInProgress(boolean rssAsyncInProgress) {
+        this.rssAsyncInProgress = rssAsyncInProgress;
+    }
+
+    public boolean getRssAsyncInProgress() {
+        return rssAsyncInProgress;
     }
 
 }

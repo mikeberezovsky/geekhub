@@ -18,7 +18,7 @@ public class RSSListAdapter extends ArrayAdapter<HackerNewsRSSItem> {
 
     private Context context;
     private int resourceLayoutId;
-    HackerNewsRSSItem[] items;
+    private HackerNewsRSSItem[] items;
 
     public RSSListAdapter(Context context, int resource, HackerNewsRSSItem[] objects) {
         super(context, resource, objects);
