@@ -14,6 +14,7 @@ import com.michaelb.homeworklong.R;
  * Created by michaelb on 11/11/14.
  */
 public class RSSContentFragment extends Fragment {
+
     public final static String ARG_URL = "cur_url";
     private String currentURL = null;
 
