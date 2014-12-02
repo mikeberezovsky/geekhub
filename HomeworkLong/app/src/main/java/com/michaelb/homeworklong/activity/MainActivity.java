@@ -14,6 +14,7 @@ import com.michaelb.homeworklong.fragment.RSSListFragment;
 
 public class MainActivity extends Activity implements RSSListFragment.ActivityListener {
     private static final String CLASS_NAME = String.valueOf(MainActivity.class);
+    private RSSListFragment rssListFragment = null;
     public void onListItemSelect(String itemURL) {
         RSSContentFragment dataContentFragment =
                 (RSSContentFragment) getFragmentManager().findFragmentById(R.id.content_fragment);
@@ -32,24 +33,23 @@ public class MainActivity extends Activity implements RSSListFragment.ActivityLi
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (!isWifiConnected()) {
-            Log.i(CLASS_NAME, "onCreate called. No wifi connected");
-            setTitle(getResources().getString(R.string.connect_wifi));
+
+        setContentView(R.layout.activity_main);
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+        Log.i(CLASS_NAME, "onCreate called");
+        if (savedInstanceState != null) {
+            return;
+        }
+        if (findViewById(R.id.fragment_container) != null) {
+            RSSListFragment rssListFragment = new RSSListFragment();
+            rssListFragment.setArguments(getIntent().getExtras());
+            getFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.fragment_container, rssListFragment)
+                    .commit();
+            this.rssListFragment = rssListFragment;
         } else {
-            setContentView(R.layout.activity_main);
-            getActionBar().setDisplayHomeAsUpEnabled(true);
-            Log.i(CLASS_NAME, "onCreate called");
-            if (savedInstanceState != null) {
-                return;
-            }
-            if (findViewById(R.id.fragment_container) != null) {
-                RSSListFragment rssListFragment = new RSSListFragment();
-                rssListFragment.setArguments(getIntent().getExtras());
-                getFragmentManager()
-                        .beginTransaction()
-                        .add(R.id.fragment_container, rssListFragment)
-                        .commit();
-            }
+            rssListFragment = (RSSListFragment) getFragmentManager().findFragmentById(R.id.list_fragment);
         }
     }
 
@@ -66,16 +66,26 @@ public class MainActivity extends Activity implements RSSListFragment.ActivityLi
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-            return true;
+        switch(id) {
+            case R.id.action_refresh:
+                refreshRSSList();
+                return true;
+            case R.id.action_settings:
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
-        return super.onOptionsItemSelected(item);
     }
 
-    private boolean isWifiConnected() {
-        ConnectivityManager connManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-        return ((netInfo != null) && netInfo.isConnected());
+    private boolean refreshRSSList() {
+        //RSSListFragment rssListFragment = (RSSListFragment) getFragmentManager().findFragmentById(R.id.list_fragment);
+        if (rssListFragment != null) {
+            Log.i(CLASS_NAME, "refreshRSSList. RSS list fragment is not null");
+            rssListFragment.refreshRSSListData();
+        } else {
+            Log.i(CLASS_NAME, "refreshRSSList. RSS list fragment is null");
+        }
+        return true;
     }
 
 }

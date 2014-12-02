@@ -1,7 +1,11 @@
 package com.michaelb.homeworklong.fragment;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Fragment;
+import android.content.DialogInterface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -70,16 +74,40 @@ public class RSSListFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         lv = (ListView) view.findViewById(R.id.rss_list_view);
         Log.i(CLASS_NAME, "onViewCreated trying to get hackerNewsRSSItems from bundle.");
-        if (savedInstanceState != null) {
-            Log.i(CLASS_NAME, "onViewCreated hackerNewsRSSItems in bundle bundle are not empty.");
-            hackerNewsRSSItems = savedInstanceState.getParcelableArrayList(RSS_ITEMS_STORAGE);
-            if (hackerNewsRSSItems != null) {
-                initRSSList(hackerNewsRSSItems);
+        initRSSList(savedInstanceState);
+    }
+
+    public void refreshRSSListData() {
+        if (isWifiConnected()) {
+            if (!rssAsyncInProgress) {
+                new RequestTask(this).execute(FeedURLs.hackernewsFeedURL);
             }
+        } else {
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setTitle(R.string.connect_wifi_title)
+                    .setMessage(R.string.connect_wifi_message)
+                    .setCancelable(false)
+                    .setNegativeButton(R.string.connect_wifi_ok_btn,
+                            new DialogInterface.OnClickListener(){
+                                public void onClick(DialogInterface dialog, int id) {
+                                    dialog.cancel();
+                                }
+                            });
+            AlertDialog alert = builder.create();
+            alert.show();
         }
-        if (hackerNewsRSSItems == null) {
-            Log.i(CLASS_NAME, "onViewCreated no hackerNewsRSSItems found in bundle.");
-            new RequestTask(this).execute(FeedURLs.hackernewsFeedURL);
+    }
+
+    public void initRSSList(Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            Log.i(CLASS_NAME, "onViewCreated savedInstanceState is not null.");
+            hackerNewsRSSItems = savedInstanceState.getParcelableArrayList(RSS_ITEMS_STORAGE);
+        }
+        if (hackerNewsRSSItems != null) {
+            Log.i(CLASS_NAME, "onViewCreated hackerNewsRSSItems in bundle bundle are not empty.");
+            initRSSList(hackerNewsRSSItems);
+        } else {
+            refreshRSSListData();
         }
     }
 
@@ -109,10 +137,11 @@ public class RSSListFragment extends Fragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
+        Log.i(CLASS_NAME, "onSaveInstanceState is called.");
         if (hackerNewsRSSItems != null && !rssAsyncInProgress) {
+            Log.i(CLASS_NAME, "onSaveInstanceState hackerNewsRSSItems is not null. Saving data");
             outState.putParcelableArrayList(RSS_ITEMS_STORAGE, (ArrayList<? extends android.os.Parcelable>) hackerNewsRSSItems);
         }
-        //outState.putString(RSS_ITEMS_STORAGE,currentURL);
     }
 
     public void setHackerNewsRSSItems(List<HackerNewsRSSItem> hackerNewsRSSItems) {
@@ -125,6 +154,12 @@ public class RSSListFragment extends Fragment {
 
     public boolean getRssAsyncInProgress() {
         return rssAsyncInProgress;
+    }
+
+    private boolean isWifiConnected() {
+        ConnectivityManager connManager = (ConnectivityManager) getActivity().getSystemService(getActivity().getApplicationContext().CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        return ((netInfo != null) && netInfo.isConnected());
     }
 
 }
