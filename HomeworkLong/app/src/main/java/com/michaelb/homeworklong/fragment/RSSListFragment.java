@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -17,9 +19,15 @@ import android.widget.ListView;
 
 import com.michaelb.homeworklong.R;
 import com.michaelb.homeworklong.adapter.RSSListAdapter;
+import com.michaelb.homeworklong.adapter.WordpressBlogRSSListAdapter;
+import com.michaelb.homeworklong.asynctask.BlogNewsRequestTask;
+import com.michaelb.homeworklong.constants.AppValues;
+import com.michaelb.homeworklong.constants.BlogNewsServiceConstants;
 import com.michaelb.homeworklong.constants.FeedURLs;
 import com.michaelb.homeworklong.entities.HackerNewsRSSItem;
 import com.michaelb.homeworklong.asynctask.RequestTask;
+import com.michaelb.homeworklong.entities.WordpressBlogRSSItem;
+import com.michaelb.homeworklong.service.BlogNewsService;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -45,7 +53,8 @@ public class RSSListFragment extends Fragment {
     private static final String CLASS_NAME = String.valueOf(RSSListFragment.class);
     private ListView lv = null;
     private ActivityListener activityListener;
-    private List<HackerNewsRSSItem> hackerNewsRSSItems = null;
+    private List<WordpressBlogRSSItem> wordpressBlogRSSItems = null;
+    private long mostFreshNewsTimestamp = 0;
     private boolean rssAsyncInProgress = false;
 
     public interface ActivityListener {
@@ -80,7 +89,8 @@ public class RSSListFragment extends Fragment {
     public void refreshRSSListData() {
         if (isWifiConnected()) {
             if (!rssAsyncInProgress) {
-                new RequestTask(this).execute(FeedURLs.hackernewsFeedURL);
+                long freshNewsTimestamp = getActivity().getIntent().getLongExtra(AppValues.CUTOFF_NEWS_TIMESTAMP_KEY, 0);
+                new BlogNewsRequestTask(this, freshNewsTimestamp).execute(FeedURLs.testblogFeedURL);
             }
         } else {
             AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
@@ -101,33 +111,33 @@ public class RSSListFragment extends Fragment {
     public void initRSSList(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             Log.i(CLASS_NAME, "onViewCreated savedInstanceState is not null.");
-            hackerNewsRSSItems = savedInstanceState.getParcelableArrayList(RSS_ITEMS_STORAGE);
+            wordpressBlogRSSItems = savedInstanceState.getParcelableArrayList(RSS_ITEMS_STORAGE);
         }
-        if (hackerNewsRSSItems != null) {
+        if (wordpressBlogRSSItems != null) {
             Log.i(CLASS_NAME, "onViewCreated hackerNewsRSSItems in bundle bundle are not empty.");
-            initRSSList(hackerNewsRSSItems);
+            initRSSList(wordpressBlogRSSItems);
         } else {
             refreshRSSListData();
         }
     }
 
-    public void initRSSList(List<HackerNewsRSSItem> items) {
-        hackerNewsRSSItems = items;
+    public void initRSSList(List<WordpressBlogRSSItem> items) {
+        wordpressBlogRSSItems = items;
         if (items == null) {
             Log.i(CLASS_NAME, "items parameter is null.");
         } else {
             Log.i(CLASS_NAME, "items parameter is not null.");
         }
-        HackerNewsRSSItem[] rssListItemsArray = items.toArray(new HackerNewsRSSItem[items.size()]);
+        WordpressBlogRSSItem[] rssListItemsArray = items.toArray(new WordpressBlogRSSItem[items.size()]);
         if (getActivity() != null) {
             lv.setAdapter(
-                    new RSSListAdapter(getActivity(), R.layout.rss_list_item, rssListItemsArray)
+                    new WordpressBlogRSSListAdapter(getActivity(), R.layout.rss_list_item, rssListItemsArray)
             );
         }
 
         AdapterView.OnItemClickListener listener = new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                HackerNewsRSSItem rssItem = (HackerNewsRSSItem) parent.getItemAtPosition(position);
+                WordpressBlogRSSItem rssItem = (WordpressBlogRSSItem) parent.getItemAtPosition(position);
                 activityListener.onListItemSelect(rssItem.getUrl());
             }
         };
@@ -138,14 +148,32 @@ public class RSSListFragment extends Fragment {
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         Log.i(CLASS_NAME, "onSaveInstanceState is called.");
-        if (hackerNewsRSSItems != null && !rssAsyncInProgress) {
+        if (wordpressBlogRSSItems != null && !rssAsyncInProgress) {
             Log.i(CLASS_NAME, "onSaveInstanceState hackerNewsRSSItems is not null. Saving data");
-            outState.putParcelableArrayList(RSS_ITEMS_STORAGE, (ArrayList<? extends android.os.Parcelable>) hackerNewsRSSItems);
+            outState.putParcelableArrayList(RSS_ITEMS_STORAGE, (ArrayList<? extends android.os.Parcelable>) wordpressBlogRSSItems);
         }
     }
 
-    public void setHackerNewsRSSItems(List<HackerNewsRSSItem> hackerNewsRSSItems) {
-        this.hackerNewsRSSItems = hackerNewsRSSItems;
+    public void setMostFreshNewsTimestamp(long timestamp) {
+        mostFreshNewsTimestamp = timestamp;
+        SharedPreferences sPref = getActivity().getPreferences(getActivity().MODE_PRIVATE);
+        long prefNewsTimestamp = sPref.getLong(AppValues.APP_STORAGE_KEY_TIMESTAMP, 0);
+        if (timestamp > prefNewsTimestamp) {
+            mostFreshNewsTimestamp = timestamp;
+            SharedPreferences.Editor ed = sPref.edit();
+            ed.putLong(AppValues.APP_STORAGE_KEY_TIMESTAMP, mostFreshNewsTimestamp);
+            ed.commit();
+        } else {
+            mostFreshNewsTimestamp = prefNewsTimestamp;
+        }
+        Intent intent = new Intent(getActivity(), BlogNewsService.class);
+        intent.setAction(BlogNewsServiceConstants.COMMAND_UPDATE_FRESH_TIMESTAMP);
+        intent.putExtra(BlogNewsServiceConstants.EXTRA_KEY_TIMESTAMP, mostFreshNewsTimestamp);
+        getActivity().startService(intent);
+    }
+
+    public void setRSSItems(List<WordpressBlogRSSItem> wordpressBlogRSSItems) {
+        this.wordpressBlogRSSItems = wordpressBlogRSSItems;
     }
 
     public void setRssAsyncInProgress(boolean rssAsyncInProgress) {

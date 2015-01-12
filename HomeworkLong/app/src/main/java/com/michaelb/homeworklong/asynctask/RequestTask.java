@@ -91,7 +91,7 @@ public class RequestTask extends AsyncTask<String, String, List<HackerNewsRSSIte
             Log.i(CLASS_NAME, "onPostExecute result is not null.");
         }
         Log.i(CLASS_NAME, "initRSSList will be called from task.");
-        rssListFragment.initRSSList(result);
+        //rssListFragment.initRSSList(result);
         rssListFragment.setRssAsyncInProgress(false);
         Log.i(CLASS_NAME, "RequestTask in progress = false");
     }
