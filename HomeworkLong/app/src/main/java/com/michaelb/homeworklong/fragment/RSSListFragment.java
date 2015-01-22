@@ -20,6 +20,7 @@ import android.widget.ListView;
 import com.michaelb.homeworklong.R;
 import com.michaelb.homeworklong.adapter.RSSListAdapter;
 import com.michaelb.homeworklong.adapter.WordpressBlogRSSListAdapter;
+import com.michaelb.homeworklong.asynctask.BlogNewsListStoredTask;
 import com.michaelb.homeworklong.asynctask.BlogNewsRequestTask;
 import com.michaelb.homeworklong.constants.AppValues;
 import com.michaelb.homeworklong.constants.BlogNewsServiceConstants;
@@ -108,6 +109,13 @@ public class RSSListFragment extends Fragment {
         }
     }
 
+    public void loadDBRSSListData(){
+        if (!rssAsyncInProgress) {
+            long freshNewsTimestamp = getActivity().getIntent().getLongExtra(AppValues.CUTOFF_NEWS_TIMESTAMP_KEY, 0);
+            new BlogNewsListStoredTask(this, freshNewsTimestamp).execute(FeedURLs.testblogFeedURL);
+        }
+    }
+
     public void initRSSList(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
             Log.i(CLASS_NAME, "onViewCreated savedInstanceState is not null.");
@@ -117,7 +125,7 @@ public class RSSListFragment extends Fragment {
             Log.i(CLASS_NAME, "onViewCreated hackerNewsRSSItems in bundle bundle are not empty.");
             initRSSList(wordpressBlogRSSItems);
         } else {
-            refreshRSSListData();
+            loadDBRSSListData();
         }
     }
 
