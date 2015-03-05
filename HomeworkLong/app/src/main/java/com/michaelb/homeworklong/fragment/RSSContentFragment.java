@@ -3,11 +3,13 @@ package com.michaelb.homeworklong.fragment;
 import android.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebView;
 
 import com.michaelb.homeworklong.R;
+import com.michaelb.homeworklong.activity.MainActivity;
 
 
 /**
@@ -17,10 +19,13 @@ public class RSSContentFragment extends Fragment {
 
     public final static String ARG_URL = "cur_url";
     private String currentURL = null;
+    private boolean rssAsyncInProgress = false;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+        //MainActivity activity = (MainActivity) getActivity();
+        //activity.displaySaveMenuItem();
         if (savedInstanceState != null) {
             currentURL = savedInstanceState.getString(ARG_URL);
         }
@@ -57,6 +62,24 @@ public class RSSContentFragment extends Fragment {
         } else {
             webView.loadData(getResources().getString(R.string.click_item_to_view_content),"text/html", null);
         }
+    }
+
+    public String getCurrentURL() {
+        return currentURL;
+    }
+
+    public void setRssAsyncInProgress(boolean rssAsyncInProgress) {
+        this.rssAsyncInProgress = rssAsyncInProgress;
+    }
+
+    public void setWebViewContent(String content) {
+        View fragmentView = getView();
+        WebView webView = (WebView) fragmentView.findViewById(R.id.rss_content_view);
+        webView.loadData(content,"text/html", null);
+    }
+
+    public boolean getRssAsyncInProgress() {
+        return rssAsyncInProgress;
     }
 
 

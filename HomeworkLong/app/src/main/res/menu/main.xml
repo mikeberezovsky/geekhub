@@ -6,6 +6,11 @@
         android:icon="@drawable/ic_menu_refresh"
         android:orderInCategory="100"
         android:showAsAction="ifRoom" />
+    <item android:id="@+id/action_save_article"
+        android:title="@string/action_save_article"
+        android:icon="@drawable/ic_menu_save"
+        android:orderInCategory="102"
+        android:showAsAction="ifRoom" />
     <item android:id="@+id/action_settings"
         android:title="@string/action_settings"
         android:orderInCategory="101"

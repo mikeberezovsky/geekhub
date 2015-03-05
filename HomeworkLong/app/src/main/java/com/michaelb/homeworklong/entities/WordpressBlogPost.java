@@ -10,7 +10,7 @@ import java.util.Date;
  * Created by michaelb on 11/12/14.
  */
 public class WordpressBlogPost implements Parcelable {
-    private String id;
+    private long id;
     private String postId;
     private String title;
     private String url;
@@ -33,7 +33,7 @@ public class WordpressBlogPost implements Parcelable {
     }
 
     public WordpressBlogPost(Parcel source) {
-        id = source.readString();
+        id = source.readLong();
         postId = source.readString();
         title = source.readString();
         url = source.readString();
@@ -43,7 +43,7 @@ public class WordpressBlogPost implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(id);
+        dest.writeLong(id);
         dest.writeString(postId);
         dest.writeString(title);
         dest.writeString(url);
@@ -81,11 +81,11 @@ public class WordpressBlogPost implements Parcelable {
         this.url = url;
     }
 
-    public String getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(long id) {
         this.id = id;
     }
 

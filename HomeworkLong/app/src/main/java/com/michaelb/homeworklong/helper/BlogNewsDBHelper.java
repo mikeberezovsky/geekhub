@@ -35,7 +35,12 @@ public class BlogNewsDBHelper extends SQLiteOpenHelper {
             WordpressBlogRSSEntry.COLUMN_POST_URL + TEXT_TYPE + COMMA_SEP +
             WordpressBlogRSSEntry.COLUMN_POST_AUTHOR + TEXT_TYPE + COMMA_SEP +
             WordpressBlogRSSEntry.COLUMN_POST_DATE_PUBLISHED + INT_TYPE +
+            WordpressBlogRSSEntry.COLUMN_POST_SAVED + INT_TYPE +
             " );";
+
+    public static final String UPDATE_RSS_ENTRIES_TABLE_V1_TO_V2 =
+            " ALTER TABLE " + WordpressBlogRSSEntry.TABLE_NAME + " ADD COLUMN " +
+                    WordpressBlogRSSEntry.COLUMN_POST_SAVED + INT_TYPE + " DEFAULT 0;";
 
     public static final String CREATE_BLOG_POST_TABLE =
             " CREATE TABLE " + WordpressBlogPostEntry.TABLE_NAME + " ( " +
@@ -53,12 +58,13 @@ public class BlogNewsDBHelper extends SQLiteOpenHelper {
             WordpressBlogRSSEntry.COLUMN_POST_TITLE,
             WordpressBlogRSSEntry.COLUMN_POST_URL,
             WordpressBlogRSSEntry.COLUMN_POST_AUTHOR,
-            WordpressBlogRSSEntry.COLUMN_POST_DATE_PUBLISHED
+            WordpressBlogRSSEntry.COLUMN_POST_DATE_PUBLISHED,
+            WordpressBlogRSSEntry.COLUMN_POST_SAVED
     };
 
 
     private static final String DATABASE_NAME = "blog_news.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     public static BlogNewsDBHelper getInstance(Context context) {
         if (dbHelperInstance == null) {
@@ -74,15 +80,23 @@ public class BlogNewsDBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase database) {
         database.execSQL(CREATE_RSS_ENTRIES_TABLE);
+        database.execSQL(CREATE_BLOG_POST_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+
         Log.w(BlogNewsDBHelper.class.getName(),
                 "Upgrading database from version " + oldVersion + " to "
-                        + newVersion + ", which will destroy all old data");
-        //db.execSQL("DROP TABLE IF EXISTS " + WordpressBlogRSSEntry.TABLE_NAME);
-        //db.execSQL("DROP TABLE IF EXISTS " + WordpressBlogPostEntry.TABLE_NAME);
+                        + newVersion + ", which will NOT destroy all old data");
+        Log.i(BlogNewsDBHelper.class.getName(),
+                "Upgrading database from version " + oldVersion + " to "
+                        + newVersion + ", which will NOT destroy all old data");
+
+        if ( oldVersion == 1 && newVersion == 2 ) {
+            db.execSQL(this.UPDATE_RSS_ENTRIES_TABLE_V1_TO_V2);
+            db.execSQL(this.CREATE_BLOG_POST_TABLE);
+        }
         //onCreate(db);
     }
 
@@ -141,6 +155,38 @@ public class BlogNewsDBHelper extends SQLiteOpenHelper {
         return readItems;
     }
 
+    public List<WordpressBlogRSSItem> getSavedRSSItems() {
+        List<WordpressBlogRSSItem> readItems = new ArrayList<WordpressBlogRSSItem>();
+        SQLiteDatabase db = getReadableDatabase();
+
+        String sortOrder = WordpressBlogRSSEntry.COLUMN_POST_DATE_PUBLISHED + " DESC";
+        String selection = WordpressBlogRSSEntry.COLUMN_POST_SAVED + " > 0";
+
+        Cursor cursor = db.query(
+                WordpressBlogRSSEntry.TABLE_NAME,
+                rssColumns,
+                selection,
+                null,
+                null,
+                null,
+                sortOrder
+        );
+        cursor.moveToFirst();
+        int i = 0;
+        while (!cursor.isAfterLast()) {
+            try {
+                readItems.add(rssItemFromCursor(cursor));
+                Log.i(CLASS_NAME, "getting saved record #"+Integer.toString(i++));
+            } catch (Exception e) {
+                Log.e(CLASS_NAME, "Error getting saved RSS news item.", e);
+            }
+            cursor.moveToNext();
+        }
+        cursor.close();
+        db.close();
+        return readItems;
+    }
+
     public void saveRSSItems(List<WordpressBlogRSSItem> rssItems) {
         SQLiteDatabase db = getWritableDatabase();
         db.beginTransaction();
@@ -152,6 +198,7 @@ public class BlogNewsDBHelper extends SQLiteOpenHelper {
                 values.put(WordpressBlogRSSEntry.COLUMN_POST_URL, item.getUrl());
                 values.put(WordpressBlogRSSEntry.COLUMN_POST_AUTHOR, item.getAuthor());
                 values.put(WordpressBlogRSSEntry.COLUMN_POST_DATE_PUBLISHED, item.getDatePublishedTimestamp());
+                values.put(WordpressBlogRSSEntry.COLUMN_POST_SAVED, item.getPostSaved());
                 db.insert(WordpressBlogRSSEntry.TABLE_NAME,null,values);
                 Log.i(CLASS_NAME, "Post '" + item.getTitle() + "' added to DB");
             }
@@ -183,6 +230,73 @@ public class BlogNewsDBHelper extends SQLiteOpenHelper {
         return ts;
     }
 
+    public boolean isPostSaved(String blogPostId) {
+        boolean postFound = false;
+        SQLiteDatabase db = getReadableDatabase();
+        String sortOrder = WordpressBlogRSSEntry.COLUMN_POST_DATE_PUBLISHED + " DESC";
+        String selection = WordpressBlogRSSEntry.COLUMN_POST_ID + " = ? AND " + WordpressBlogRSSEntry.COLUMN_POST_SAVED + " > 0";
+        String[] selectionArgs = { blogPostId };
+        Cursor cursor = db.query(
+                WordpressBlogRSSEntry.TABLE_NAME,
+                rssColumns,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                sortOrder
+        );
+        postFound = cursor.getCount() > 0;
+        db.close();
+        return postFound;
+    }
+
+    public WordpressBlogRSSItem findPostByURL(String blogPostURL) {
+        WordpressBlogRSSItem rssEntry = null;
+        SQLiteDatabase db = getReadableDatabase();
+        //String sortOrder = WordpressBlogRSSEntry.COLUMN_POST_DATE_PUBLISHED + " DESC";
+        String selection = WordpressBlogRSSEntry.COLUMN_POST_URL + " = ?";
+        String[] selectionArgs = { blogPostURL };
+        Cursor cursor = db.query(
+                WordpressBlogRSSEntry.TABLE_NAME,
+                rssColumns,
+                selection,
+                selectionArgs,
+                null,
+                null,
+                null
+        );
+        if (cursor.getCount() > 0) {
+            cursor.moveToFirst();
+            rssEntry = rssItemFromCursor(cursor);
+        }
+        db.close();
+        return rssEntry;
+    }
+
+    public void saveBlogPost(WordpressBlogPost blogPost) {
+        if ( !isPostSaved(blogPost.getPostId()) ) {
+            SQLiteDatabase db = getWritableDatabase();
+            db.beginTransaction();
+            try {
+                ContentValues values = new ContentValues();
+                values.put(WordpressBlogPostEntry.COLUMN_POST_ID, blogPost.getPostId());
+                values.put(WordpressBlogPostEntry.COLUMN_POST_TITLE, blogPost.getTitle());
+                values.put(WordpressBlogPostEntry.COLUMN_POST_URL, blogPost.getUrl());
+                values.put(WordpressBlogPostEntry.COLUMN_POST_GZIPPED, blogPost.getPostGzipped());
+                values.put(WordpressBlogPostEntry.COLUMN_POST_HTML, blogPost.getPostHTML());
+                db.insert(WordpressBlogRSSEntry.TABLE_NAME, null, values);
+                Log.i(CLASS_NAME, "Post '" + blogPost.getTitle() + "' saved to DB");
+
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+            db.close();
+        } else {
+            Log.i(CLASS_NAME, "Post '" + blogPost.getTitle() + "'has been saved to DB earlier. Not saving now.");
+        }
+    }
+
     private WordpressBlogRSSItem rssItemFromCursor(Cursor cursor) {
         WordpressBlogRSSItem rssItem = new WordpressBlogRSSItem();
         rssItem.setId(cursor.getLong(cursor.getColumnIndexOrThrow(WordpressBlogRSSEntry.COLUMN_ID)));
@@ -191,6 +305,7 @@ public class BlogNewsDBHelper extends SQLiteOpenHelper {
         rssItem.setUrl(cursor.getString(cursor.getColumnIndexOrThrow(WordpressBlogRSSEntry.COLUMN_POST_URL)));
         rssItem.setDatePublished(cursor.getLong(cursor.getColumnIndexOrThrow(WordpressBlogRSSEntry.COLUMN_POST_DATE_PUBLISHED)));
         rssItem.setAuthor(cursor.getString(cursor.getColumnIndexOrThrow(WordpressBlogRSSEntry.COLUMN_POST_AUTHOR)));
+        rssItem.setPostSaved(cursor.getInt(cursor.getColumnIndexOrThrow(WordpressBlogRSSEntry.COLUMN_POST_SAVED)));
         Log.i(CLASS_NAME, "rssItemFromCursor for entry '"+rssItem.getTitle()+"' processed.");
         return rssItem;
     }

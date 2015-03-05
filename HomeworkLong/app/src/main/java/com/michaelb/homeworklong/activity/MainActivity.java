@@ -9,20 +9,28 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.webkit.WebView;
 
 import com.michaelb.homeworklong.R;
 import com.michaelb.homeworklong.constants.AppValues;
 import com.michaelb.homeworklong.constants.BlogNewsServiceConstants;
+import com.michaelb.homeworklong.entities.WordpressBlogPost;
+import com.michaelb.homeworklong.entities.WordpressBlogRSSItem;
 import com.michaelb.homeworklong.fragment.RSSContentFragment;
 import com.michaelb.homeworklong.fragment.RSSListFragment;
+import com.michaelb.homeworklong.helper.BlogNewsDBHelper;
 import com.michaelb.homeworklong.service.BlogNewsService;
 
 public class MainActivity extends Activity implements RSSListFragment.ActivityListener {
     private static final String CLASS_NAME = String.valueOf(MainActivity.class);
+
     private RSSListFragment rssListFragment = null;
+
+    private Menu menu = null;
+
     public void onListItemSelect(String itemURL) {
-        RSSContentFragment dataContentFragment =
-                (RSSContentFragment) getFragmentManager().findFragmentById(R.id.content_fragment);
+        RSSContentFragment dataContentFragment = findExistingContentFragment();
         if (dataContentFragment != null && dataContentFragment.isVisible()) {
             dataContentFragment.setWebViewURL(itemURL);
         } else {
@@ -31,7 +39,8 @@ public class MainActivity extends Activity implements RSSListFragment.ActivityLi
             args.putString(RSSContentFragment.ARG_URL ,itemURL);
             contentFragment.setArguments(args);
             getFragmentManager().beginTransaction()
-                    .replace(R.id.fragment_container,contentFragment).addToBackStack(null).commit();
+                    .replace(R.id.fragment_container,contentFragment,AppValues.RSS_CONTENT_FRAGMENT_TAG)
+                    .addToBackStack(null).commit();
         }
     }
 
@@ -42,6 +51,9 @@ public class MainActivity extends Activity implements RSSListFragment.ActivityLi
         setContentView(R.layout.activity_main);
         getActionBar().setDisplayHomeAsUpEnabled(true);
         Log.i(CLASS_NAME, "onCreate called");
+        //MenuItem item = (MenuItem) findViewById(R.id.action_save_article);
+        //item.setVisible(false);
+        //this.invalidateOptionsMenu();
         if (savedInstanceState != null) {
             return;
         }
@@ -86,7 +98,9 @@ public class MainActivity extends Activity implements RSSListFragment.ActivityLi
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
+        this.menu = menu;
         getMenuInflater().inflate(R.menu.main, menu);
+        //this.hideSaveMenuItem();
         return true;
     }
 
@@ -102,6 +116,9 @@ public class MainActivity extends Activity implements RSSListFragment.ActivityLi
                 //stopService(intent);
                 refreshRSSList();
                 return true;
+            case R.id.action_save_article:
+                handleSaveArticleClick();
+                return true;
             case android.R.id.home:
                 onBackPressed();
                 return true;
@@ -109,6 +126,36 @@ public class MainActivity extends Activity implements RSSListFragment.ActivityLi
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    public void displaySaveMenuItem() {
+        if ( this.menu != null ) {
+            this.menu.findItem(R.id.action_save_article).setVisible(true);
+            this.invalidateOptionsMenu();
+        }
+    }
+
+    public void hideSaveMenuItem() {
+        if ( this.menu != null ) {
+            this.menu.findItem(R.id.action_save_article).setVisible(false);
+            this.invalidateOptionsMenu();
+        }
+    }
+
+    public void updateSaveItemMenu(boolean articleSaved) {
+        if ( this.menu != null ) {
+            MenuItem item = this.menu.findItem(R.id.action_save_article);
+            if ( item != null ) {
+                if ( articleSaved ) {
+                    item.setIcon(R.drawable.ic_menu_remove);
+                    item.setTitle(R.string.action_remove_article);
+                } else {
+                    item.setIcon(R.drawable.ic_menu_save);
+                    item.setTitle(R.string.action_save_article);
+                }
+                this.invalidateOptionsMenu();
+            }
         }
     }
 
@@ -121,6 +168,40 @@ public class MainActivity extends Activity implements RSSListFragment.ActivityLi
             Log.i(CLASS_NAME, "refreshRSSList. RSS list fragment is null");
         }
         return true;
+    }
+
+    private RSSContentFragment findExistingContentFragment() {
+        RSSContentFragment dataContentFragment =
+                (RSSContentFragment) getFragmentManager().findFragmentById(R.id.content_fragment);
+        if ( dataContentFragment == null ) {
+            dataContentFragment = (RSSContentFragment) getFragmentManager()
+                    .findFragmentByTag(AppValues.RSS_CONTENT_FRAGMENT_TAG);
+        }
+        return dataContentFragment;
+    }
+
+    private void handleSaveArticleClick() {
+        RSSContentFragment dataContentFragment = findExistingContentFragment();
+        if (dataContentFragment != null && dataContentFragment.isVisible()) {
+            String url = dataContentFragment.getCurrentURL();
+            if ( url != null ) {
+                WordpressBlogRSSItem rssItem = BlogNewsDBHelper.getInstance(getApplicationContext())
+                        .findPostByURL(url);
+                if (rssItem != null) {
+                    if (rssItem.isPostSaved()) {
+
+                    } else {
+                        WordpressBlogPost blogPost = new WordpressBlogPost();
+                        blogPost.setPostId(rssItem.getPostId());
+                        blogPost.setTitle(rssItem.getTitle());
+                        blogPost.setUrl(rssItem.getUrl());
+                        WebView webView = (WebView) dataContentFragment.getView().findViewById(R.id.rss_content_view);
+                        //blogPost.setPostHTML(webView.sa);
+                    }
+
+                }
+            }
+        }
     }
 
 }

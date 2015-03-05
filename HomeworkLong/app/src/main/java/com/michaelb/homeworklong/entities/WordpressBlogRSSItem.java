@@ -16,6 +16,7 @@ public class WordpressBlogRSSItem implements Parcelable {
     private String url;
     private long datePublished;
     private String author;
+    private int postSaved = 0;
 
     /* Inner class that defines the table contents */
     public static abstract class WordpressBlogRSSEntry implements BaseColumns {
@@ -26,6 +27,7 @@ public class WordpressBlogRSSItem implements Parcelable {
         public static final String COLUMN_POST_URL = "url";
         public static final String COLUMN_POST_DATE_PUBLISHED = "date_published";
         public static final String COLUMN_POST_AUTHOR = "author";
+        public static final String COLUMN_POST_SAVED = "post_saved";
     }
 
 
@@ -39,6 +41,7 @@ public class WordpressBlogRSSItem implements Parcelable {
         url = source.readString();
         datePublished = source.readLong();
         author = source.readString();
+        postSaved = source.readInt();
     }
 
     @Override
@@ -49,6 +52,7 @@ public class WordpressBlogRSSItem implements Parcelable {
         dest.writeString(url);
         dest.writeLong(datePublished);
         dest.writeString(author);
+        dest.writeInt(postSaved);
     }
 
     @Override
@@ -124,4 +128,21 @@ public class WordpressBlogRSSItem implements Parcelable {
     public void setAuthor(String author) {
         this.author = author;
     }
+
+    public boolean isPostSaved() {
+        return postSaved > 0;
+    }
+
+    public int getPostSaved() {
+        return postSaved;
+    }
+
+    public void setPostSaved(int postSaved) {
+        this.postSaved = postSaved;
+    }
+
+    public void setPostSaved(Boolean postSaved) {
+        this.postSaved = (postSaved != null && postSaved) ? 1 : 0;
+    }
+
 }
